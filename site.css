@@ -7,6 +7,12 @@ h1, h2, h3, h4, h5, h6 {
   color: #ffffff;
 }
 
+.page-shell {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 .site-header {
   padding: 4rem 1rem 3rem;
   text-align: center;
