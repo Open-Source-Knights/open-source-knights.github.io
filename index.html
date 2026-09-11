@@ -1,104 +1,154 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Open-Source Knights</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <style>
-    body {
-      background-color: #121212;
-      color: #ebebeb;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-      color: #ffffff;
-    }
-    
-    .page-shell {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 0 1rem;
-    }
-    
-    .site-header {
-      /* padding: 4rem 1rem 3rem; */
-      text-align: center;
-    }
-    
-    .site-logo {
-      max-width: 180px;
-      height: auto;
-      margin-bottom: 1.5rem;
-    }
-    
-    .site-title {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    
-    .site-subtitle {
-      font-size: clamp(1.1rem, 2vw, 1.5rem);
-      color: #ebebeb;
-      margin-bottom: 0;
-    }
-  </style>
+	<style>
+		body {
+			background-color: #121212;
+			color: #ebebeb;
+		}
+
+		.page-shell {
+			max-width: 1200px;
+		}
+
+		.site-logo {
+			max-width: 250px;
+		}
+		
+		.btn-osk {
+			background-color: #1f3f66;
+			color: #ffffff;
+			border: none;
+		}
+
+		.btn-osk:hover,
+		.btn-osk:focus {
+			background-color: #2a527f;
+			color: #ffffff;
+			border: none;
+		}
+	</style>
 </head>
 
 <body>
-    <div class="page-shell">    
-    
-    <header class="site-header">
-    <div class="container">
-      <img src="images/OSK Temporary Logo.png" alt="Open-Source Knights logo" class="site-logo img-fluid border border-white border-2 rounded">
-      <p class="site-subtitle">
-         A Streamlined TTRPG for Crafting Bespoke Heroes
-      </p>
-      <hr />
-    </div>
-    </header>
-    
-    <div class="container py-3">
-        <div class="mx-auto">
-            <h2>What is Open-Source Knights?</h2>
-            <p class="">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-            </p>
-        </div>
-    </div>
+    <div class="page-shell mx-auto px-3">
 
-    <div class="container py-3">
-        <div class="mx-auto">
-            <h2>Downloads</h2>
-            <div class="row px-3 py-2">
-                <div class="col-md-5 fw-semibold">Core Rules</div>
-                <div class="col-md-7 text-secondary">Complete rules for play.</div>
-            </div>
-    
-            <div class="row px-3 py-2">
-                <div class="col-md-5 fw-semibold">Quickstart Guide</div>
-                <div class="col-md-7 text-secondary">Learn the basics quickly.</div>
-            </div>
-    
-            <div class="row px-3 py-2">
-                <div class="col-md-5 fw-semibold">Example Card Compendium</div>
-                <div class="col-md-7 text-secondary">Sample abilities and cards.</div>
-            </div>
-    
-            <div class="row px-3 py-2">
-                <div class="col-md-5 fw-semibold">Character Sheet (.pdf)</div>
-                <div class="col-md-7 text-secondary">Printable character sheet.</div>
-            </div>
-    
-            <div class="row px-3 py-2">
-                <div class="col-md-5 fw-semibold">Character Sheet (.xlsx)</div>
-                <div class="col-md-7 text-secondary">Editable spreadsheet version.</div>
-            </div>
-        </div>
-    </div>
-        
-    </div> <!-- End of page shell -->
+        <!-- Header -->
+		<header class="container py-3 text-center">
+			<div class="d-flex flex-column align-items-center gap-3">
+				<img
+					src="images/OSK Temporary Logo.png"
+					alt="Open-Source Knights logo"
+					class="site-logo img-fluid border border-white border-2 rounded">
+
+				<h4 class="fw-bold mb-0">
+					A Streamlined TTRPG for Crafting Bespoke Heroes
+				</h4>
+			</div>
+
+			<hr>
+		</header>		
+
+		<!-- Introduction -->
+		<div class="container pb-4">
+			<h2 class="">What is Open-Source Knights?</h2>
+
+			<div class="px-3 px-md-5">
+				Open-Source Knights is a tabletop roleplaying game framework built from the familiar foundation of D&D 5E, with a greater emphasis on streamlined gameplay, tactical combat, and flexible character design. 
+				Players create and customize their own abilities using a shared mechanical language, while the rules are designed to keep those options quick to read, easy to use, and simple to resolve at the table. 
+				<br /> <br />
+				Like many TTRPGs, OSK puts the fiction first: players describe what their characters attempt, the Game Master determines how the rules apply, and dice are used when the outcome is uncertain. 
+				The goal is to remain approachable to players who already know D&D - or who are completely new to TTRPGs - while giving experienced players much more freedom to build characters that feel uniquely their own.
+			</div>
+		</div>
+
+		<!-- Downloads -->
+		<div class="container py-4">
+			<h2>Downloads</h2>
+
+			<div class="px-3 px-md-5">
+				<div class="row align-items-center py-2">
+					<div class="col-md-3">
+						<a href="https://github.com/your-org/your-repo/releases" class="btn btn-osk w-100 rounded-4" target="_blank" rel="noopener noreferrer"> Core Rules </a>
+					</div>
+					<div class="col-md-9">
+						Complete rules for creating characters, playing the game, and running encounters.
+					</div>
+				</div>
+
+				<div class="row align-items-center py-2">
+					<div class="col-md-3">
+						<a href="https://github.com/your-org/your-repo/releases" class="btn btn-osk w-100 rounded-4" target="_blank" rel="noopener noreferrer"> Quickstart Guide </a>
+					</div>
+					<div class="col-md-9">
+						A concise guide to the core rules for getting started quickly.
+					</div>
+				</div>
+
+				<div class="row align-items-center py-2">
+					<div class="col-md-3">
+						<a href="https://github.com/your-org/your-repo/releases" class="btn btn-osk w-100 rounded-4" target="_blank" rel="noopener noreferrer"> Example Card Compendium </a>
+					</div>
+					<div class="col-md-9">
+						A collection of example abilities for inspiration, adaptation, or direct use.
+					</div>
+				</div>
+
+				<div class="row align-items-center py-2">
+					<div class="col-md-3">
+						<a href="https://github.com/your-org/your-repo/releases" class="btn btn-osk w-100 rounded-4" target="_blank" rel="noopener noreferrer"> Character Sheet (.pdf) </a>
+					</div>
+					<div class="col-md-9">
+						A printable sheet for tracking your character’s stats, skills, and resources.
+					</div>
+				</div>
+
+				<div class="row align-items-center py-2">
+					<div class="col-md-3">
+						<a href="https://github.com/your-org/your-repo/releases" class="btn btn-osk w-100 rounded-4" target="_blank" rel="noopener noreferrer"> Character Sheet (.xlsx) </a>
+					</div>
+					<div class="col-md-9">
+						An editable spreadsheet version of the character sheet.
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Contact -->
+		<div class="container py-4">
+			<h2>Links & Contact</h2>
+
+			<div class="px-3 px-md-5">
+				<div class="d-flex flex-wrap align-items-center gap-2">
+					<span>You can also find us at:</span>
+					<a href="https://google.com">Reddit</a>
+					<span>/</span>
+					<a href="https://google.com">Substack</a>
+					<span>/</span>
+					<a href="https://google.com">Bluesky</a>
+					<span>/</span>
+					<a href="https://google.com">YouTube</a>
+				</div>
+
+				<div class="mt-2">
+					Or you can also contact us directly at: &nbsp; <a href="mailto:OpenSourceKnights@example.com">OpenSourceKnights@example.com</a>.
+				</div>
+			</div>
+		</div>
+		
+		<!-- Footer -->
+		<footer class="container pt-3 pb-5 text-center border-top text-secondary">
+			<small>
+				&copy; 2026 Open-Source Knights
+			</small>
+		</footer>
+
+    </div> <!-- end of Page Shell -->
 </body>
 </html>
+
