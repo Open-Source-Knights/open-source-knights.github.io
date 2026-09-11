@@ -1,1 +1,31 @@
+body {
+  background-color: #121212;
+  color: #ebebeb;
+}
 
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff;
+}
+
+.site-header {
+  padding: 4rem 1rem 3rem;
+  text-align: center;
+}
+
+.site-logo {
+  max-width: 180px;
+  height: auto;
+  margin-bottom: 1.5rem;
+}
+
+.site-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.site-subtitle {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  color: #ebebeb;
+  margin-bottom: 0;
+}
