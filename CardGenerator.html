@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Source Knights Card Generator</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+		body {
+			margin: 0;
+			padding: 40px 20px;
+			font-family: "Trebuchet MS", Arial, sans-serif;
+			background-color: #121212;
+			color: #ebebeb;
+		}
+
+		.generator {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+
+		.editor {
+			background-color: #1b1b1b;
+			border-color: #444444 !important;
+		}
+
+		.subtitle {
+			color: #bbbbbb;
+		}
+
+		textarea.form-control {
+			height: 220px;
+			resize: vertical;
+		}
+
+		#downloadButton {
+			background-color: #1f3f66;
+			border-color: #1f3f66;
+		}
+
+		#downloadButton:hover,
+		#downloadButton:focus {
+			background-color: #2a527f;
+			border-color: #2a527f;
+		}
+
+		.preview {
+			width: 360px;
+			flex-shrink: 0;
+		}
+
+		canvas {
+			display: block;
+			width: 360px;
+			height: 600px;
+			background: white;
+			border: 2px solid #555555;
+			border-radius: 4px;
+			box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+		}
+
+		@media (max-width: 767px) {
+			.preview {
+				width: 100%;
+				max-width: 360px;
+			}
+
+			canvas {
+				width: 100%;
+				height: auto;
+				aspect-ratio: 3 / 5;
+			}
+		}
+    </style>
+</head>
+
+<body data-bs-theme="dark">
+<div class="generator">
+
+	<div class="row g-4 align-items-start">
+
+		<!-- CARD INPUTS -->
+		<div class="col-12 col-md">
+			<section class="editor border rounded-3 shadow p-4">
+
+				<h1 class="mb-1">Open-Source Knights Card Generator</h1>
+				<p class="subtitle mb-4"> Create a 3×5 notecard and download it as a PNG.</p>
+
+				<div class="mb-3">
+					<label for="cardType" class="form-label fw-bold">Card Type</label>
+					<select id="cardType" class="form-select">
+						<option value="ability">Ability</option>
+						<option value="species">Species</option>
+						<option value="equipment">Equipment</option>
+						<option value="consumable">Consumable</option>
+					</select>
+				</div>
+
+				<div class="mb-3">
+					<label for="title" class="form-label fw-bold">Card Title</label>
+					<input id="title" class="form-control" type="text" placeholder="Fireball" maxlength="100">
+				</div>
+
+				<div class="row g-3 mb-3">
+					<div class="col-4">
+						<label for="level" class="form-label fw-bold"> Level Obtained </label>
+						<input id="level" class="form-control" type="text" placeholder="[L1]">
+					</div>
+
+					<div class="col-8">
+						<label for="cooldown" class="form-label fw-bold">Cooldown</label>
+						<input id="cooldown" class="form-control" type="text"placeholder="Requires Cooldown">
+					</div>
+				</div>
+
+				<div class="mb-3">
+					<label for="source" class="form-label fw-bold"> Source Ability </label>
+					<input id="source" class="form-control"	type="text"	placeholder="Source: D&D / Wizard / Fireball">
+				</div>
+
+				<div class="mb-3">
+					<label for="cardText" class="form-label fw-bold"> Card Text </label>
+					<textarea id="cardText" class="form-control" placeholder="Enter the card's rules, flavor text, traits, effects, or other information here."	></textarea>
+				</div>
+
+				<button	id="downloadButton"	class="btn btn-primary w-100 fw-bold py-3" type="button">Download PNG</button>
+			</section>
+		</div>
+
+		<!-- CARD PREVIEW -->
+		<div class="col-12 col-md-auto">
+			<section class="preview">
+				<p class="fw-bold mb-2">Preview</p>
+				<canvas	id="cardCanvas" width="900" height="1500"></canvas>
+			</section>
+		</div>
+
+	</div>
+
+</div>
+
+
+    <script>
+        const canvas = document.getElementById("cardCanvas");
+        const ctx = canvas.getContext("2d");
+		const CARD_FONT = "Arial, sans-serif";
+
+		const cardTypeInput = document.getElementById("cardType");
+        const titleInput = document.getElementById("title");
+        const levelInput = document.getElementById("level");
+        const cooldownInput = document.getElementById("cooldown");
+        const sourceInput = document.getElementById("source");
+        const textInput = document.getElementById("cardText");
+        const downloadButton = document.getElementById("downloadButton");
+
+		//Canvas dimensions: 900x1500px;  At 300 DPI, this corresponds exactly to a portrait 3x5 inch index card
+        const CARD_WIDTH = 900;
+        const CARD_HEIGHT = 1500;
+
+        const OUTER_MARGIN = 65;
+		const TITLE_Y = 105;
+		const META_Y = 155;
+		const SOURCE_Y = 200;
+		const RULE_Y = 230;
+		const BODY_TOP = 290;
+        const BODY_BOTTOM = 1425;
+        const BODY_WIDTH = CARD_WIDTH - (OUTER_MARGIN * 2);
+
+        //Draw the complete card.
+        function RenderCard() 
+		{
+			const cardType = cardTypeInput.value;
+            const title = titleInput.value.trim() || "CARD TITLE";
+            const level = levelInput.value.trim();
+            const cooldown = cooldownInput.value.trim();
+            const source = sourceInput.value.trim();
+            const body = textInput.value;
+
+            //Background
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+
+			//Outer Border
+            ctx.strokeStyle = "#111111";
+            ctx.lineWidth = 5;
+            ctx.strokeRect(15, 15, CARD_WIDTH - 30, CARD_HEIGHT - 30);
+
+			//Title
+			switch (cardType)
+			{
+				case "ability":
+					ctx.fillStyle = "#0099ff";
+					break;
+
+				case "species":
+					ctx.fillStyle = "#cc4444";
+					break;
+
+				case "equipment":
+					ctx.fillStyle = "#339933";
+					break;
+
+				case "consumable":
+					ctx.fillStyle = "#9933cc";
+					break;
+			}
+            ctx.textBaseline = "alphabetic";
+            ctx.font = `bold 54px ${CARD_FONT}`;
+            drawSingleLineFitted(title, OUTER_MARGIN, TITLE_Y, BODY_WIDTH, 54, 34, "bold");
+
+			//Level + Cooldown ("metadata")
+            ctx.font = `30px ${CARD_FONT}`;
+			let metadata = "";
+			if (level) {metadata += level;}
+			if (level && cooldown) {metadata += " | ";}
+			if (cooldown) {metadata += cooldown;}
+			ctx.textAlign = "left";
+			ctx.fillText(metadata, OUTER_MARGIN, META_Y);
+			
+			//Source Ability (text should be light gray)
+			ctx.font = `30px ${CARD_FONT}`;
+			ctx.textAlign = "left";
+			ctx.fillStyle = "#bbbbbb";
+			if (source) { ctx.fillText(source, OUTER_MARGIN, SOURCE_Y); }
+			ctx.fillStyle = "#111111";
+
+            //Horizontal Rule
+            ctx.beginPath();
+            ctx.moveTo(OUTER_MARGIN, RULE_Y);
+            ctx.lineTo(CARD_WIDTH - OUTER_MARGIN, RULE_Y);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#111111";
+            ctx.stroke();
+
+            //Main card text
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            DrawBodyText(body, OUTER_MARGIN, BODY_TOP, BODY_WIDTH, BODY_BOTTOM - BODY_TOP);
+        } //End of RenderCard
+
+
+        //Draw the title on one line. (If the title is too long, decrease its font size until it fits.
+        function drawSingleLineFitted(text, x, y, maxWidth, startingSize, minimumSize, weight)
+		{
+            let fontSize = startingSize;
+            while (fontSize > minimumSize) 
+			{
+                ctx.font = `${weight} ${fontSize}px ${CARD_FONT}`;
+				
+                if (ctx.measureText(text).width <= maxWidth) 
+				{
+                    break;
+                }
+				
+                fontSize -= 2;
+            }
+            ctx.textAlign = "left";
+            ctx.fillText(text, x, y);
+        }
+
+        //Draw the large freeform body of the card.
+        //The function preserves: paragraph breaks, manual line breaks, normal word wrapping
+        //It automatically reduces the font size if the body does not fit vertically.
+        function DrawBodyText(text, x, y, maxWidth, maxHeight) 
+		{
+            if (!text.trim()) { return; }
+
+            let fontSize = 38;
+            const minimumFontSize = 24;
+            let layout;
+
+            while (fontSize >= minimumFontSize) 
+			{
+                const lineHeight = Math.round(fontSize * 1.32);
+                ctx.font = `${fontSize}px ${CARD_FONT}`;
+                layout = createTextLayout(text, maxWidth);
+                const totalHeight = layout.length * lineHeight;
+                if (totalHeight <= maxHeight) { break; }
+                fontSize -= 2;
+            }
+
+            const lineHeight = Math.round(fontSize * 1.32);
+            ctx.font = `${fontSize}px ${CARD_FONT}`;
+            ctx.fillStyle = "#111111";
+            let currentY = y;
+
+            for (const line of layout) 
+			{
+                if (currentY + lineHeight > y + maxHeight) { break; }
+                ctx.fillText(line, x, currentY);
+                currentY += lineHeight;
+            }
+        }
+
+        //Convert the user's freeform text into wrapped lines. Respect explicit newline characters.
+        function createTextLayout(text, maxWidth) 
+		{
+            const outputLines = [];
+            const paragraphs = text.replace(/\r/g, "").split("\n");
+
+            for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) 
+			{
+                const paragraph = paragraphs[paragraphIndex];
+
+                //Preserve blank lines.
+                if (paragraph.trim() === "") 
+				{
+                    outputLines.push("");
+                    continue;
+                }
+
+                const words = paragraph.split(/\s+/);
+                let currentLine = "";
+                for (const word of words) 
+				{
+                    const testLine = currentLine ? currentLine + " " + word : word;
+                    const testWidth = ctx.measureText(testLine).width;
+
+					//Normal wrapping
+                    if (testWidth > maxWidth && currentLine) 
+					{
+                        outputLines.push(currentLine);
+
+                        //Handle any extremely long words
+                        if (ctx.measureText(word).width > maxWidth) 
+						{
+                            const brokenWordLines = BreakLongWord(word, maxWidth);
+                            outputLines.push(...brokenWordLines.slice(0, -1));
+                            currentLine = brokenWordLines[brokenWordLines.length - 1 ];
+                        } 
+						else 
+						{
+                            currentLine = word;
+                        }
+                    }
+					else
+					{
+                        currentLine = testLine;
+                    }
+                }
+
+                if (currentLine) { outputLines.push(currentLine); }
+            }
+
+            return outputLines;
+        }
+
+        //Emergency handling for an unusually long string with no spaces.
+        function BreakLongWord(word, maxWidth)
+		{
+            const lines = [];
+            let current = "";
+
+            for (const character of word) 
+			{
+                const test = current + character;
+                if (ctx.measureText(test).width > maxWidth && current) 
+				{
+                    lines.push(current);
+                    current = character;
+                } 
+				else 
+				{
+                    current = test;
+                }
+            }
+
+            if (current) {lines.push(current);}
+
+            return lines;
+        }
+
+        //Convert the title into a reasonable file name.
+        function CreateFilename() 
+		{
+            let filename = titleInput.value.trim().toLowerCase();
+            if (!filename) { filename = "osk-card"; }
+ 			filename = filename.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+            return filename + ".png";
+        }
+
+        //Download the canvas directly as a PNG.
+        function DownloadCard() 
+		{
+            RenderCard();
+
+            canvas.toBlob(
+                function(blob) 
+				{
+                    if (!blob) { return; }
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = CreateFilename();
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(url);
+                },
+                "image/png"
+            );
+        }
+
+        //Redraw the card whenever the user edits anything.
+		[
+			cardTypeInput,
+			titleInput,
+			levelInput,
+			cooldownInput,
+			sourceInput,
+			textInput
+		].forEach(function(input)
+		{
+			input.addEventListener(
+				"input",
+				RenderCard
+			);
+		});
+
+        downloadButton.addEventListener("click", DownloadCard);
+
+        //Initial blank card
+        RenderCard();
+
+    </script>
+
+</body>
+</html>
