@@ -1,0 +1,39 @@
+body {
+	background-color: #121212;
+	color: #ebebeb;
+	font-family: "Trebuchet MS", Arial, sans-serif;
+	font-size: 1.2rem;
+}
+
+.page-shell {
+	max-width: 1200px;
+}
+
+.site-logo {
+	width: 600px;
+	max-width: 100%;
+	height: auto;
+}
+
+.btn-osk {
+	background-color: #1f3f66;
+	color: #ffffff;
+	border: none;
+}
+
+.btn-osk:hover,
+.btn-osk:focus {
+	background-color: #2a527f;
+	color: #ffffff;
+	border: none;
+}
+
+.homepage-link:hover {
+	background-color: #1f1f1f;
+	border-color: #777777 !important;
+}
+
+.feature-list strong {
+	color: #23a66d;
+	font-weight: 700;
+}
