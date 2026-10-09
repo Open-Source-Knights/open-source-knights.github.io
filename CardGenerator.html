@@ -101,23 +101,25 @@
 					<input id="title" class="form-control" type="text" placeholder="Fireball" maxlength="100">
 				</div>
 
-				<div class="row g-3 mb-3">
-					<div class="col-4">
-						<label for="level" class="form-label fw-bold"> Level Obtained </label>
-						<input id="level" class="form-control" type="text" placeholder="[L1]">
+				<div id="abilityFields">
+					<div class="row g-3 mb-3">
+						<div class="col-4">
+							<label for="level" class="form-label fw-bold"> Level Obtained </label>
+							<input id="level" class="form-control" type="text" placeholder="[L1]">
+						</div>
+
+						<div class="col-8">
+							<label for="cooldown" class="form-label fw-bold">Cooldown</label>
+							<input id="cooldown" class="form-control" type="text"placeholder="Requires Cooldown">
+						</div>
 					</div>
 
-					<div class="col-8">
-						<label for="cooldown" class="form-label fw-bold">Cooldown</label>
-						<input id="cooldown" class="form-control" type="text"placeholder="Requires Cooldown">
+					<div class="mb-3">
+						<label for="source" class="form-label fw-bold"> Source Ability </label>
+						<input id="source" class="form-control"	type="text"	placeholder="Source: D&D / Wizard / Fireball">
 					</div>
 				</div>
-
-				<div class="mb-3">
-					<label for="source" class="form-label fw-bold"> Source Ability </label>
-					<input id="source" class="form-control"	type="text"	placeholder="Source: D&D / Wizard / Fireball">
-				</div>
-
+				
 				<div class="mb-3">
 					<label for="cardText" class="form-label fw-bold"> Card Text </label>
 					<textarea id="cardText" class="form-control" placeholder="Enter the card's rules, flavor text, traits, effects, or other information here."	></textarea>
@@ -155,6 +157,7 @@
         const sourceInput = document.getElementById("source");
         const textInput = document.getElementById("cardText");
         const downloadButton = document.getElementById("downloadButton");
+		const abilityFields = document.getElementById("abilityFields");
 
 		//Canvas dimensions: 900x1500px;  At 300 DPI, this corresponds exactly to a portrait 3x5 inch index card
         const CARD_WIDTH = 900;
@@ -164,8 +167,10 @@
 		const TITLE_Y = 105;
 		const META_Y = 155;
 		const SOURCE_Y = 200;
-		const RULE_Y = 230;
-		const BODY_TOP = 290;
+		const RULE_Y_ABILITY = 230;
+		const BODY_TOP_ABILITY = 290;
+		const RULE_Y_OTHER = 165;
+		const BODY_TOP_OTHER = 225;
         const BODY_BOTTOM = 1425;
         const BODY_WIDTH = CARD_WIDTH - (OUTER_MARGIN * 2);
 
@@ -173,6 +178,7 @@
         function RenderCard() 
 		{
 			const cardType = cardTypeInput.value;
+			const isAbility = (cardType === "ability");
             const title = titleInput.value.trim() || "CARD TITLE";
             const level = levelInput.value.trim();
             const cooldown = cooldownInput.value.trim();
@@ -211,34 +217,41 @@
             ctx.font = `bold 54px ${CARD_FONT}`;
             drawSingleLineFitted(title, OUTER_MARGIN, TITLE_Y, BODY_WIDTH, 54, 34, "bold");
 
-			//Level + Cooldown ("metadata")
-            ctx.font = `30px ${CARD_FONT}`;
-			let metadata = "";
-			if (level) {metadata += level;}
-			if (level && cooldown) {metadata += " | ";}
-			if (cooldown) {metadata += cooldown;}
-			ctx.textAlign = "left";
-			ctx.fillText(metadata, OUTER_MARGIN, META_Y);
-			
-			//Source Ability (text should be light gray)
-			ctx.font = `30px ${CARD_FONT}`;
-			ctx.textAlign = "left";
-			ctx.fillStyle = "#bbbbbb";
-			if (source) { ctx.fillText(source, OUTER_MARGIN, SOURCE_Y); }
-			ctx.fillStyle = "#111111";
+			//Ability-only metadata
+			if (isAbility)
+			{
+				//Level + Cooldown
+				ctx.font = `30px ${CARD_FONT}`;
+				let metadata = "";
+				if (level) {metadata += level;}
+				if (level && cooldown) {metadata += " | ";}
+				if (cooldown) {metadata += cooldown;}
+				ctx.textAlign = "left";
+				ctx.fillText(metadata, OUTER_MARGIN, META_Y);
+
+				//Source Ability
+				ctx.font = `30px ${CARD_FONT}`;
+				ctx.textAlign = "left";
+				ctx.fillStyle = "#bbbbbb";
+				if (source) {ctx.fillText(source, OUTER_MARGIN, SOURCE_Y);}
+				ctx.fillStyle = "#111111";
+			}
 
             //Horizontal Rule
-            ctx.beginPath();
-            ctx.moveTo(OUTER_MARGIN, RULE_Y);
-            ctx.lineTo(CARD_WIDTH - OUTER_MARGIN, RULE_Y);
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "#111111";
-            ctx.stroke();
-
-            //Main card text
-            ctx.textAlign = "left";
-            ctx.textBaseline = "top";
-            DrawBodyText(body, OUTER_MARGIN, BODY_TOP, BODY_WIDTH, BODY_BOTTOM - BODY_TOP);
+			const ruleY = isAbility ? RULE_Y_ABILITY : RULE_Y_OTHER;
+			ctx.beginPath();
+			ctx.moveTo(OUTER_MARGIN, ruleY);
+			ctx.lineTo(CARD_WIDTH - OUTER_MARGIN, ruleY);
+			ctx.lineWidth = 3;
+			ctx.strokeStyle = "#111111";
+			ctx.stroke();
+			
+			//Main card text
+			const bodyTop = isAbility ? BODY_TOP_ABILITY : BODY_TOP_OTHER;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "top";
+			DrawBodyText(body, OUTER_MARGIN, bodyTop, BODY_WIDTH, BODY_BOTTOM - bodyTop);
+			
         } //End of RenderCard
 
 
@@ -381,6 +394,13 @@
  			filename = filename.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
             return filename + ".png";
         }
+		
+		//Disable Level/Cooldown/Source unless it's an Ability card
+		function UpdateCardTypeInputs()
+		{
+			const isAbility = (cardTypeInput.value === "ability");
+			abilityFields.hidden = !isAbility;
+		}
 
         //Download the canvas directly as a PNG.
         function DownloadCard() 
@@ -406,7 +426,6 @@
 
         //Redraw the card whenever the user edits anything.
 		[
-			cardTypeInput,
 			titleInput,
 			levelInput,
 			cooldownInput,
@@ -414,16 +433,20 @@
 			textInput
 		].forEach(function(input)
 		{
-			input.addEventListener(
-				"input",
-				RenderCard
-			);
+			input.addEventListener("input", RenderCard);
+		});
+
+		cardTypeInput.addEventListener("change", function()
+		{
+			UpdateCardTypeInputs();
+			RenderCard();
 		});
 
         downloadButton.addEventListener("click", DownloadCard);
 
-        //Initial blank card
-        RenderCard();
+		//Initial card state
+		UpdateCardTypeInputs();
+		RenderCard();
 
     </script>
 
