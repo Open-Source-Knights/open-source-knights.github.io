@@ -6,7 +6,7 @@
     <title>Open Source Knights Card Generator</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="./styles.css">
-	
+
     <style>
 		body {
 			margin: 0;
@@ -33,17 +33,6 @@
 		textarea.form-control {
 			height: 220px;
 			resize: vertical;
-		}
-
-		#downloadButton {
-			background-color: #1f3f66;
-			border-color: #1f3f66;
-		}
-
-		#downloadButton:hover,
-		#downloadButton:focus {
-			background-color: #2a527f;
-			border-color: #2a527f;
 		}
 
 		.preview {
@@ -101,19 +90,15 @@
 					<input id="title" class="form-control" type="text" placeholder="Fireball" maxlength="100">
 				</div>
 
-				<div id="abilityFields">
-					<div class="row g-3 mb-3">
-						<div class="col-4">
-							<label for="level" class="form-label fw-bold"> Level Obtained </label>
-							<input id="level" class="form-control" type="text" placeholder="[L1]">
-						</div>
-
-						<div class="col-8">
-							<label for="cooldown" class="form-label fw-bold">Cooldown</label>
-							<input id="cooldown" class="form-control" type="text"placeholder="Requires Cooldown">
-						</div>
+				<div id="secondaryInfoFields">
+					<div class="mb-3">
+						<label for="secondaryInfo" class="form-label fw-bold">Secondary Info</label>	
+						<span class="fw-normal ms-1" style="font-size: 0.6em; color: #888888;"> (e.g. Level Obtained, Cooldown Requirements, etc.)</span>
+						<input id="secondaryInfo" class="form-control" type="text" placeholder="[L1] | Requires Cooldown">
 					</div>
+				</div>
 
+				<div id="abilityFields">
 					<div class="mb-3">
 						<label for="source" class="form-label fw-bold"> Source Ability </label>
 						<input id="source" class="form-control"	type="text"	placeholder="Source: D&D / Wizard / Fireball">
@@ -152,12 +137,12 @@
 
 		const cardTypeInput = document.getElementById("cardType");
         const titleInput = document.getElementById("title");
-        const levelInput = document.getElementById("level");
-        const cooldownInput = document.getElementById("cooldown");
+		const secondaryInfoInput = document.getElementById("secondaryInfo");
         const sourceInput = document.getElementById("source");
         const textInput = document.getElementById("cardText");
         const downloadButton = document.getElementById("downloadButton");
 		const abilityFields = document.getElementById("abilityFields");
+		const secondaryInfoFields = document.getElementById("secondaryInfoFields");
 
 		//Canvas dimensions: 900x1500px;  At 300 DPI, this corresponds exactly to a portrait 3x5 inch index card
         const CARD_WIDTH = 900;
@@ -180,8 +165,7 @@
 			const cardType = cardTypeInput.value;
 			const isAbility = (cardType === "ability");
             const title = titleInput.value.trim() || "CARD TITLE";
-            const level = levelInput.value.trim();
-            const cooldown = cooldownInput.value.trim();
+			const secondaryInfo = secondaryInfoInput.value.trim();
             const source = sourceInput.value.trim();
             const body = textInput.value;
 
@@ -215,30 +199,39 @@
 			}
             ctx.textBaseline = "alphabetic";
             ctx.font = `bold 54px ${CARD_FONT}`;
-            drawSingleLineFitted(title, OUTER_MARGIN, TITLE_Y, BODY_WIDTH, 54, 34, "bold");
+            DrawSingleLineFitted(title, OUTER_MARGIN, TITLE_Y, BODY_WIDTH, 54, 34, "bold");
 
-			//Ability-only metadata
+			//Secondary info for Ability, Equipment, and Consumables
+			if (cardType !== "species")
+			{
+				ctx.font = `30px ${CARD_FONT}`;
+				ctx.textAlign = "left";
+				ctx.fillStyle = "#111111";
+
+				if (secondaryInfo)
+				{
+					ctx.fillText(secondaryInfo, OUTER_MARGIN, META_Y);
+				}
+			}
+
+			//Ability-only source
 			if (isAbility)
 			{
-				//Level + Cooldown
-				ctx.font = `30px ${CARD_FONT}`;
-				let metadata = "";
-				if (level) {metadata += level;}
-				if (level && cooldown) {metadata += " | ";}
-				if (cooldown) {metadata += cooldown;}
-				ctx.textAlign = "left";
-				ctx.fillText(metadata, OUTER_MARGIN, META_Y);
-
-				//Source Ability
 				ctx.font = `30px ${CARD_FONT}`;
 				ctx.textAlign = "left";
 				ctx.fillStyle = "#bbbbbb";
-				if (source) {ctx.fillText(source, OUTER_MARGIN, SOURCE_Y);}
+
+				if (source)
+				{
+					ctx.fillText(source, OUTER_MARGIN, SOURCE_Y);
+				}
+
 				ctx.fillStyle = "#111111";
 			}
 
             //Horizontal Rule
-			const ruleY = isAbility ? RULE_Y_ABILITY : RULE_Y_OTHER;
+			const hasSecondaryInfo = (cardType !== "species");
+			const ruleY = hasSecondaryInfo ? RULE_Y_ABILITY : RULE_Y_OTHER;
 			ctx.beginPath();
 			ctx.moveTo(OUTER_MARGIN, ruleY);
 			ctx.lineTo(CARD_WIDTH - OUTER_MARGIN, ruleY);
@@ -247,7 +240,7 @@
 			ctx.stroke();
 			
 			//Main card text
-			const bodyTop = isAbility ? BODY_TOP_ABILITY : BODY_TOP_OTHER;
+			const bodyTop = hasSecondaryInfo ? BODY_TOP_ABILITY : BODY_TOP_OTHER;
 			ctx.textAlign = "left";
 			ctx.textBaseline = "top";
 			DrawBodyText(body, OUTER_MARGIN, bodyTop, BODY_WIDTH, BODY_BOTTOM - bodyTop);
@@ -256,7 +249,7 @@
 
 
         //Draw the title on one line. (If the title is too long, decrease its font size until it fits.
-        function drawSingleLineFitted(text, x, y, maxWidth, startingSize, minimumSize, weight)
+        function DrawSingleLineFitted(text, x, y, maxWidth, startingSize, minimumSize, weight)
 		{
             let fontSize = startingSize;
             while (fontSize > minimumSize) 
@@ -289,7 +282,7 @@
 			{
                 const lineHeight = Math.round(fontSize * 1.32);
                 ctx.font = `${fontSize}px ${CARD_FONT}`;
-                layout = createTextLayout(text, maxWidth);
+                layout = CreateTextLayout(text, maxWidth);
                 const totalHeight = layout.length * lineHeight;
                 if (totalHeight <= maxHeight) { break; }
                 fontSize -= 2;
@@ -309,7 +302,7 @@
         }
 
         //Convert the user's freeform text into wrapped lines. Respect explicit newline characters.
-        function createTextLayout(text, maxWidth) 
+        function CreateTextLayout(text, maxWidth) 
 		{
             const outputLines = [];
             const paragraphs = text.replace(/\r/g, "").split("\n");
@@ -398,7 +391,10 @@
 		//Disable Level/Cooldown/Source unless it's an Ability card
 		function UpdateCardTypeInputs()
 		{
-			const isAbility = (cardTypeInput.value === "ability");
+			const cardType = cardTypeInput.value;
+			const isAbility = (cardType === "ability");
+			const isSpecies = (cardType === "species");
+			secondaryInfoFields.hidden = isSpecies;
 			abilityFields.hidden = !isAbility;
 		}
 
@@ -427,8 +423,7 @@
         //Redraw the card whenever the user edits anything.
 		[
 			titleInput,
-			levelInput,
-			cooldownInput,
+			secondaryInfoInput,
 			sourceInput,
 			textInput
 		].forEach(function(input)
