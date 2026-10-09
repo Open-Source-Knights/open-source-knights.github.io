@@ -154,6 +154,8 @@
 		const SOURCE_Y = 200;
 		const RULE_Y_ABILITY = 230;
 		const BODY_TOP_ABILITY = 290;
+		const RULE_Y_SECONDARY = 195;
+		const BODY_TOP_SECONDARY = 235;
 		const RULE_Y_OTHER = 165;
 		const BODY_TOP_OTHER = 225;
         const BODY_BOTTOM = 1425;
@@ -231,7 +233,19 @@
 
             //Horizontal Rule
 			const hasSecondaryInfo = (cardType !== "species");
-			const ruleY = hasSecondaryInfo ? RULE_Y_ABILITY : RULE_Y_OTHER;
+			let ruleY;
+			if (isAbility)
+			{
+				ruleY = RULE_Y_ABILITY;
+			}
+			else if (cardType !== "species")
+			{
+				ruleY = RULE_Y_SECONDARY;
+			}
+			else
+			{
+				ruleY = RULE_Y_OTHER;
+			}
 			ctx.beginPath();
 			ctx.moveTo(OUTER_MARGIN, ruleY);
 			ctx.lineTo(CARD_WIDTH - OUTER_MARGIN, ruleY);
@@ -240,7 +254,19 @@
 			ctx.stroke();
 			
 			//Main card text
-			const bodyTop = hasSecondaryInfo ? BODY_TOP_ABILITY : BODY_TOP_OTHER;
+			let bodyTop;
+			if (isAbility)
+			{
+				bodyTop = BODY_TOP_ABILITY;
+			}
+			else if (cardType !== "species")
+			{
+				bodyTop = BODY_TOP_SECONDARY;
+			}
+			else
+			{
+				bodyTop = BODY_TOP_OTHER;
+			}
 			ctx.textAlign = "left";
 			ctx.textBaseline = "top";
 			DrawBodyText(body, OUTER_MARGIN, bodyTop, BODY_WIDTH, BODY_BOTTOM - bodyTop);
