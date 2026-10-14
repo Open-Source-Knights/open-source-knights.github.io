@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Source Knights Card Generator</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./styles.css">
+
+    <style>
+		body {
+			margin: 0;
+			padding: 40px 20px;
+			font-family: "Trebuchet MS", Arial, sans-serif;
+			background-color: #121212;
+			color: #ebebeb;
+		}
+
+		.generator {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+
+		.editor {
+			background-color: #1b1b1b;
+			border-color: #444444 !important;
+		}
+
+		.subtitle {
+			color: #bbbbbb;
+		}
+
+		textarea.form-control {
+			height: 220px;
+			resize: vertical;
+		}
+
+		.preview {
+			width: 360px;
+			flex-shrink: 0;
+		}
+
+		canvas {
+			display: block;
+			width: 360px;
+			height: 600px;
+			background: white;
+			border: 2px solid #555555;
+			border-radius: 4px;
+			box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+		}
+
+		@media (max-width: 767px) {
+			.preview {
+				width: 100%;
+				max-width: 360px;
+			}
+
+			canvas {
+				width: 100%;
+				height: auto;
+				aspect-ratio: 3 / 5;
+			}
+		}
+    </style>
+</head>
+
+<body data-bs-theme="dark">
+<div class="generator">
+	<div class="row g-4 align-items-start">
+
+		<!-- CARD INPUTS -->
+		<div class="col-12 col-md">
+			<section class="editor border rounded-3 shadow p-4">
+
+				<h1 class="mb-4">Open-Source Knights Card Generator</h1>
+
+				<div class="mb-3">
+					<label for="cardType" class="form-label fw-bold">Card Type</label>
+					<select id="cardType" class="form-select">
+						<option value="ability">Ability</option>
+						<option value="species">Species</option>
+						<option value="equipment">Equipment</option>
+						<option value="consumable">Consumable</option>
+					</select>
+				</div>
+
+				<div class="mb-3">
+					<label for="title" class="form-label fw-bold">Card Title</label>
+					<input id="title" class="form-control" type="text" placeholder="Fireball / Dwarf / Hookshot / Healing Potion" maxlength="100">
+				</div>
+
+				<div id="secondaryInfoFields">
+					<div class="mb-3">
+						<label for="secondaryInfo" class="form-label fw-bold">Secondary Info</label>	
+						<span class="fw-normal ms-1" style="font-size: 0.6em; color: #888888;"> (e.g. Level Obtained, Cooldown Requirements, etc.)</span>
+						<input id="secondaryInfo" class="form-control" type="text" placeholder="[L1] | Requires Cooldown">
+					</div>
+				</div>
+
+				<div id="abilityFields">
+					<div class="mb-3">
+						<label for="source" class="form-label fw-bold"> Source Ability </label>
+						<input id="source" class="form-control"	type="text"	placeholder="Source: D&D / Wizard / Fireball">
+					</div>
+				</div>
+				
+				<div class="mb-3">
+					<label for="cardText" class="form-label fw-bold"> Card Text </label>
+					<textarea id="cardText" class="form-control" placeholder="Enter the card's rules, flavor text, traits, effects, or other information here."	></textarea>
+				</div>
+
+				<div class="d-flex gap-2 pt-2">
+					<a href="https://open-source-knights.github.io/" class="btn btn-secondary w-50 rounded-5 py-3">Cancel / Return</a>
+					<button id="downloadButton" class="btn btn-osk w-50 rounded-5 py-3 ms-auto" type="button">Download PNG</button>
+				</div>
+			</section>
+		</div>
+
+		<!-- CARD PREVIEW -->
+		<div class="col-12 col-md-auto">
+			<section class="preview">
+				<p class="fw-bold mb-2">Card Preview:</p>
+				<canvas	id="cardCanvas" width="900" height="1500"></canvas>
+			</section>
+		</div>
+
+	</div>
+
+</div>
+
+<script>
+	const canvas = document.getElementById("cardCanvas");
+	const ctx = canvas.getContext("2d");
+	const CARD_FONT = "Arial, sans-serif";
+
+	const cardTypeInput = document.getElementById("cardType");
+	const titleInput = document.getElementById("title");
+	const secondaryInfoInput = document.getElementById("secondaryInfo");
+	const sourceInput = document.getElementById("source");
+	const textInput = document.getElementById("cardText");
+	const downloadButton = document.getElementById("downloadButton");
+	const abilityFields = document.getElementById("abilityFields");
+	const secondaryInfoFields = document.getElementById("secondaryInfoFields");
+
+	//Canvas dimensions: 900x1500px;  At 300 DPI, this corresponds exactly to a portrait 3x5 inch index card
+	const CARD_WIDTH = 900;
+	const CARD_HEIGHT = 1500;
+
+	//Card typography: exactly two font sizes.
+	const TITLE_FONT_SIZE = 54;
+	const TITLE_MIN_FONT_SIZE = 34;
+	const TEXT_FONT_SIZE = 38;
+	const TEXT_LINE_HEIGHT = Math.round(TEXT_FONT_SIZE * 1.32);
+
+	//Card geometry. Keep content margins independent from the decorative border.
+	const BORDER_INSET = 15;
+	const CONTENT_MARGIN = 65;
+	const CONTENT_WIDTH = CARD_WIDTH - (CONTENT_MARGIN * 2);
+	const CONTENT_BOTTOM = CARD_HEIGHT - CONTENT_MARGIN;
+
+	//Vertical spacing around the horizontal rule, measured in text line-heights (similar to using em/rem units in CSS).
+	const RULE_GAP_BEFORE = 0.6;
+	const RULE_GAP_AFTER = 0.4;
+
+	//Draw the complete card.
+	function RenderCard() 
+	{
+		const cardType = cardTypeInput.value;
+		const isAbility = (cardType === "ability");
+		const title = titleInput.value.trim() || "CARD TITLE";
+		const secondaryInfo = secondaryInfoInput.value.trim();
+		const source = sourceInput.value.trim();
+		const body = textInput.value;
+
+		//Background
+		ctx.fillStyle = "#ffffff";
+		ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+
+		//Outer Border
+		ctx.strokeStyle = "#111111";
+		ctx.lineWidth = 5;
+		ctx.strokeRect(
+			BORDER_INSET,
+			BORDER_INSET,
+			CARD_WIDTH - (BORDER_INSET * 2),
+			CARD_HEIGHT - (BORDER_INSET * 2)
+		);
+
+		let currentY = CONTENT_MARGIN;
+
+		//Title
+		switch (cardType)
+		{
+			case "ability":
+				ctx.fillStyle = "#0099ff";
+				break;
+
+			case "species":
+				ctx.fillStyle = "#cc4444";
+				break;
+
+			case "equipment":
+				ctx.fillStyle = "#339933";
+				break;
+
+			case "consumable":
+				ctx.fillStyle = "#9933cc";
+				break;
+		}
+		ctx.textBaseline = "alphabetic";
+		const titleY = currentY + TITLE_FONT_SIZE;
+		DrawSingleLineFitted(title, CONTENT_MARGIN, titleY, CONTENT_WIDTH, TITLE_FONT_SIZE, TITLE_MIN_FONT_SIZE, "bold");
+
+		
+		
+		//Secondary info for Ability, Equipment, and Consumables.
+		//Reserve its line even when empty so each card type keeps a stable layout.
+		//Metadata uses the same font size and line-height as the body text.
+		ctx.font = `${TEXT_FONT_SIZE}px ${CARD_FONT}`;
+		currentY = titleY;
+		ctx.fillStyle = "#111111";
+		if (cardType !== "species")
+		{	
+			currentY = currentY + TEXT_LINE_HEIGHT;
+			if (secondaryInfo)
+			{
+				ctx.fillText(secondaryInfo, CONTENT_MARGIN, currentY, CONTENT_WIDTH);
+			}
+		}
+
+		//Ability-only source.
+		if (isAbility)
+		{
+			currentY += TEXT_LINE_HEIGHT;
+			ctx.fillStyle = "#bbbbbb";
+			if (source)
+			{
+				ctx.fillText(source, CONTENT_MARGIN, currentY, CONTENT_WIDTH);
+			}
+			ctx.fillStyle = "#111111";
+		}
+
+		//Horizontal rule positioning is relative to the shared text line-height.
+		const ruleY = currentY + (TEXT_LINE_HEIGHT * RULE_GAP_BEFORE);
+		ctx.beginPath();
+		ctx.moveTo(CONTENT_MARGIN, ruleY);
+		ctx.lineTo(CARD_WIDTH - CONTENT_MARGIN, ruleY);
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#111111";
+		ctx.stroke();
+
+		//Main card text begins a line-height-relative distance below the rule.
+		const bodyTop = ruleY + (TEXT_LINE_HEIGHT * RULE_GAP_AFTER);
+		DrawBodyText(body, CONTENT_MARGIN, bodyTop, CONTENT_WIDTH, CONTENT_BOTTOM - bodyTop);
+
+	} //End of RenderCard
+
+
+	//Draw the title on one line. (If the title is too long, decrease its font size until it fits.
+	function DrawSingleLineFitted(text, x, y, maxWidth, startingSize, minimumSize, weight)
+	{
+		let fontSize = startingSize;
+
+		while (fontSize > minimumSize)
+		{
+			ctx.font = `${weight} ${fontSize}px ${CARD_FONT}`;
+
+			if (ctx.measureText(text).width <= maxWidth)
+			{
+				break;
+			}
+
+			fontSize -= 2;
+		}
+
+		ctx.textAlign = "left";
+		ctx.fillText(text, x, y);
+	}
+
+	//Draw the large freeform body of the card at the shared text size.
+	//The function preserves paragraph breaks, manual line breaks, and normal word wrapping.
+	function DrawBodyText(text, x, y, maxWidth, maxHeight) 
+	{
+		if (!text.trim()) { return; }
+
+		ctx.font = `${TEXT_FONT_SIZE}px ${CARD_FONT}`;
+		ctx.fillStyle = "#111111";
+		ctx.textAlign = "left";
+		ctx.textBaseline = "top";
+
+		const layout = CreateTextLayout(text, maxWidth);
+		let currentY = y;
+
+		for (const line of layout) 
+		{
+			if (currentY + TEXT_LINE_HEIGHT > y + maxHeight) { break; }
+			ctx.fillText(line, x, currentY);
+			currentY += TEXT_LINE_HEIGHT;
+		}
+	}
+
+
+	//Convert the user's freeform text into wrapped lines. Respect explicit newline characters.
+	function CreateTextLayout(text, maxWidth) 
+	{
+		const outputLines = [];
+		const paragraphs = text.replace(/\r/g, "").split("\n");
+
+		for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) 
+		{
+			const paragraph = paragraphs[paragraphIndex];
+
+			//Preserve blank lines.
+			if (paragraph.trim() === "") 
+			{
+				outputLines.push("");
+				continue;
+			}
+
+			const words = paragraph.split(/\s+/);
+			let currentLine = "";
+			for (const word of words) 
+			{
+				const testLine = currentLine ? currentLine + " " + word : word;
+				const testWidth = ctx.measureText(testLine).width;
+
+				//Normal wrapping
+				if (testWidth > maxWidth && currentLine) 
+				{
+					outputLines.push(currentLine);
+
+					//Handle any extremely long words
+					if (ctx.measureText(word).width > maxWidth) 
+					{
+						const brokenWordLines = BreakLongWord(word, maxWidth);
+						outputLines.push(...brokenWordLines.slice(0, -1));
+						currentLine = brokenWordLines[brokenWordLines.length - 1 ];
+					} 
+					else 
+					{
+						currentLine = word;
+					}
+				}
+				else
+				{
+					currentLine = testLine;
+				}
+			}
+
+			if (currentLine) { outputLines.push(currentLine); }
+		}
+
+		return outputLines;
+	}
+
+	//Emergency handling for an unusually long string with no spaces.
+	function BreakLongWord(word, maxWidth)
+	{
+		const lines = [];
+		let current = "";
+
+		for (const character of word) 
+		{
+			const test = current + character;
+			if (ctx.measureText(test).width > maxWidth && current) 
+			{
+				lines.push(current);
+				current = character;
+			} 
+			else 
+			{
+				current = test;
+			}
+		}
+
+		if (current) {lines.push(current);}
+
+		return lines;
+	}
+
+	//Convert the title into a reasonable file name.
+	function CreateFilename() 
+	{
+		let filename = titleInput.value.trim().toLowerCase();
+		if (!filename) { filename = "osk-card"; }
+		filename = filename.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+		return filename + ".png";
+	}
+	
+	//Disable Level/Cooldown/Source unless it's an Ability card
+	function UpdateCardTypeInputs()
+	{
+		const cardType = cardTypeInput.value;
+		const isAbility = (cardType === "ability");
+		const isSpecies = (cardType === "species");
+		secondaryInfoFields.hidden = isSpecies;
+		abilityFields.hidden = !isAbility;
+	}
+
+	//Download the canvas directly as a PNG.
+	function DownloadCard() 
+	{
+		RenderCard();
+
+		canvas.toBlob(
+			function(blob) 
+			{
+				if (!blob) { return; }
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement("a");
+				link.href = url;
+				link.download = CreateFilename();
+				document.body.appendChild(link);
+				link.click();
+				link.remove();
+				URL.revokeObjectURL(url);
+			},
+			"image/png"
+		);
+	}
+
+	//Redraw the card whenever the user edits anything.
+	[
+		titleInput,
+		secondaryInfoInput,
+		sourceInput,
+		textInput
+	].forEach(function(input)
+	{
+		input.addEventListener("input", RenderCard);
+	});
+
+	cardTypeInput.addEventListener("change", function()
+	{
+		UpdateCardTypeInputs();
+		RenderCard();
+	});
+
+	downloadButton.addEventListener("click", DownloadCard);
+
+	//Initial card state
+	UpdateCardTypeInputs();
+	RenderCard();
+
+</script>
+
+</body>
+</html>
